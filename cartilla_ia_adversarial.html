@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartilla: Algoritmos de Búsqueda Adversarial en IA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --ink: #0d0e13;
+  --paper: #f4f1eb;
+  --accent: #c1440e;
+  --accent2: #1a3a5c;
+  --accent3: #2d7a4f;
+  --gold: #d4a017;
+  --light-bg: #eae7df;
+  --mono: 'Space Mono', monospace;
+  --serif: 'DM Serif Display', serif;
+  --sans: 'DM Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--paper); color: var(--ink); font-family: var(--sans); }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: var(--ink); color: var(--paper);
+  display: flex; gap: 0; overflow-x: auto;
+}
+nav a {
+  padding: 12px 18px; color: var(--paper); text-decoration: none;
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em;
+  text-transform: uppercase; white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  transition: background 0.2s;
+}
+nav a:hover, nav a.active { background: var(--accent); }
+
+.page { min-height: 100vh; padding: 80px 0 60px; }
+
+#portada {
+  background: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+  padding: 80px 40px 60px;
+}
+.portada-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(193,68,14,0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(193,68,14,0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.portada-bg-circles { position: absolute; inset: 0; pointer-events: none; }
+.circle { position: absolute; border-radius: 50%; border: 1px solid rgba(193,68,14,0.3); }
+.c1 { width: 500px; height: 500px; top: -100px; right: -100px; }
+.c2 { width: 300px; height: 300px; bottom: -50px; left: -50px; }
+.c3 { width: 200px; height: 200px; top: 40%; left: 20%; }
+.portada-content { position: relative; z-index: 2; text-align: center; max-width: 800px; }
+.portada-badge {
+  display: inline-block; background: var(--accent); color: white;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.15em;
+  text-transform: uppercase; padding: 6px 16px; margin-bottom: 32px;
+}
+.portada-title {
+  font-family: var(--serif); font-size: clamp(2.5rem, 6vw, 5rem);
+  color: var(--paper); line-height: 1.1; margin-bottom: 24px;
+}
+.portada-title em { color: var(--accent); font-style: italic; }
+.portada-subtitle {
+  font-family: var(--mono); font-size: 0.85rem;
+  color: rgba(244,241,235,0.6); letter-spacing: 0.1em; margin-bottom: 48px;
+}
+.portada-illustration { margin: 40px auto; max-width: 500px; }
+.tree-svg { width: 100%; }
+.portada-footer {
+  font-family: var(--mono); font-size: 0.75rem;
+  color: rgba(244,241,235,0.4); margin-top: 40px; letter-spacing: 0.05em;
+}
+
+#legal {
+  background: var(--accent2); color: var(--paper);
+  display: flex; align-items: center; justify-content: center; padding: 80px 40px;
+}
+.legal-inner { max-width: 640px; width: 100%; }
+.legal-rule { height: 3px; background: var(--accent); margin-bottom: 40px; }
+.legal-title { font-family: var(--serif); font-size: 2.5rem; margin-bottom: 8px; }
+.legal-sub { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.1em; color: rgba(244,241,235,0.6); margin-bottom: 40px; }
+.legal-block { margin-bottom: 24px; }
+.legal-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.legal-value { font-size: 1rem; font-weight: 500; }
+.legal-note { margin-top: 40px; padding: 20px; border: 1px solid rgba(244,241,235,0.2); font-size: 0.85rem; line-height: 1.7; color: rgba(244,241,235,0.75); }
+
+.section-wrap { max-width: 860px; margin: 0 auto; padding: 0 32px; }
+.section-eyebrow { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+.section-heading { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); line-height: 1.15; margin-bottom: 32px; border-bottom: 3px solid var(--ink); padding-bottom: 16px; }
+.section-body { font-size: 1rem; line-height: 1.85; color: #2a2a2a; }
+.section-body p { margin-bottom: 1.2em; }
+
+#toc { background: var(--light-bg); }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: 32px; }
+@media (max-width: 600px) { .toc-grid { grid-template-columns: 1fr; } }
+.toc-item { background: white; padding: 20px 24px; display: flex; align-items: flex-start; gap: 16px; transition: background 0.2s; }
+.toc-item:hover { background: var(--ink); color: var(--paper); }
+.toc-num { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); min-width: 28px; padding-top: 2px; }
+.toc-item:hover .toc-num { color: var(--accent); }
+.toc-text { font-size: 0.9rem; font-weight: 500; }
+.toc-desc { font-size: 0.78rem; color: #666; margin-top: 4px; }
+.toc-item:hover .toc-desc { color: rgba(244,241,235,0.7); }
+
+#intro { background: var(--paper); }
+.intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+@media (max-width: 620px) { .intro-grid { grid-template-columns: 1fr; } }
+.intro-card { padding: 24px; border-left: 4px solid var(--accent); background: var(--light-bg); }
+.intro-card-q { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 10px; }
+.intro-card-a { font-size: 0.9rem; line-height: 1.7; }
+
+#contenido1 { background: var(--light-bg); }
+#contenido2 { background: white; }
+#contenido3 { background: var(--light-bg); }
+#contenido4 { background: white; }
+#ejercicio  { background: var(--ink); color: var(--paper); }
+
+.callout { background: var(--ink); color: var(--paper); padding: 24px 28px; margin: 28px 0; border-left: 5px solid var(--accent); }
+.callout.green { background: var(--accent3); border-color: #fff; }
+.callout.blue  { background: var(--accent2); border-color: var(--gold); }
+.callout-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em; margin-bottom: 8px; color: var(--accent); }
+.callout.green .callout-label { color: #a8f0c6; }
+.callout.blue  .callout-label { color: var(--gold); }
+.callout p { font-size: 0.92rem; line-height: 1.75; }
+
+.diagram-title { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 12px; }
+
+.compare-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 0.88rem; }
+.compare-table th { background: var(--ink); color: var(--paper); padding: 12px 16px; text-align: left; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.08em; }
+.compare-table td { padding: 12px 16px; border-bottom: 1px solid #e0ddd6; vertical-align: top; }
+.compare-table tr:nth-child(even) td { background: var(--light-bg); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 2px; font-size: 0.72rem; font-family: var(--mono); }
+.tag-red { background: #fce8e2; color: var(--accent); }
+.tag-green { background: #e2f4ea; color: var(--accent3); }
+.tag-blue { background: #e2eaf4; color: var(--accent2); }
+
+.code-wrap { background: #1a1f2e; border-radius: 4px; padding: 24px; margin: 24px 0; overflow-x: auto; }
+.code-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.code-lang { font-family: var(--mono); font-size: 0.7rem; color: #64b5f6; letter-spacing: 0.1em; }
+.code-file { font-family: var(--mono); font-size: 0.7rem; color: #a0a0a0; }
+pre { font-family: var(--mono); font-size: 0.78rem; line-height: 1.7; color: #e0e0e0; white-space: pre; }
+.kw { color: #c792ea; }
+.fn { color: #82aaff; }
+.cm { color: #546e7a; }
+.st { color: #c3e88d; }
+.nm { color: #f78c6c; }
+
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 32px 0; }
+@media (max-width: 580px) { .stats-row { grid-template-columns: 1fr 1fr; } }
+.stat-card { padding: 20px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+.stat-num { font-family: var(--serif); font-size: 2.2rem; color: var(--accent); }
+.stat-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em; color: rgba(244,241,235,0.6); margin-top: 6px; }
+
+.pseudo { background: #f8f6f0; border: 1px solid #ddd; border-left: 4px solid var(--accent2); padding: 20px 24px; margin: 20px 0; font-family: var(--mono); font-size: 0.8rem; line-height: 1.9; }
+.pseudo .ind1 { padding-left: 24px; }
+.pseudo .ind2 { padding-left: 48px; }
+.pseudo .ind3 { padding-left: 72px; }
+.pseudo .hl { color: var(--accent); font-weight: bold; }
+.pseudo .c { color: #888; }
+
+#conclusiones { background: var(--accent2); color: var(--paper); }
+#conclusiones .section-heading { border-color: rgba(255,255,255,0.3); color: var(--paper); }
+.conclusion-list { list-style: none; margin: 24px 0; }
+.conclusion-list li { padding: 16px 20px 16px 52px; position: relative; background: rgba(255,255,255,0.06); margin-bottom: 8px; border-left: 3px solid var(--gold); font-size: 0.92rem; line-height: 1.7; }
+.conclusion-list li::before { content: attr(data-n); position: absolute; left: 16px; top: 16px; font-family: var(--mono); font-size: 0.75rem; color: var(--gold); }
+.personal-stmt { margin-top: 32px; padding: 28px; border: 2px solid rgba(212,160,23,0.5); background: rgba(212,160,23,0.08); }
+.personal-label { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.15em; color: var(--gold); margin-bottom: 12px; }
+.personal-stmt p { font-size: 0.95rem; line-height: 1.85; font-style: italic; }
+
+#referencias { background: var(--light-bg); }
+.ref-list { margin-top: 24px; }
+.ref-item { padding: 16px 0; border-bottom: 1px solid #d5d0c8; font-size: 0.87rem; line-height: 1.75; display: flex; gap: 16px; align-items: flex-start; }
+.ref-n { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); min-width: 28px; padding-top: 3px; }
+
+.bar-chart { margin: 28px 0; }
+.bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.bar-label { font-family: var(--mono); font-size: 0.72rem; min-width: 120px; color: var(--paper); }
+.bar-track { flex: 1; height: 32px; background: rgba(255,255,255,0.08); position: relative; overflow: hidden; }
+.bar-fill { height: 100%; display: flex; align-items: center; padding-left: 12px; font-family: var(--mono); font-size: 0.72rem; color: white; font-weight: 700; }
+.bar-fill.mm { background: var(--accent); }
+.bar-fill.ab { background: var(--accent3); }
+
+.info-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 28px 0; }
+@media (max-width: 580px) { .info-2col { grid-template-columns: 1fr; } }
+.info-box { padding: 20px; border: 2px solid; }
+.info-box.red { border-color: var(--accent); }
+.info-box.blue { border-color: var(--accent2); }
+.info-box-title { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; margin-bottom: 10px; }
+.info-box.red .info-box-title { color: var(--accent); }
+.info-box.blue .info-box-title { color: var(--accent2); }
+.info-box ul { padding-left: 16px; font-size: 0.87rem; line-height: 1.8; }
+
+.cta-bar { background: var(--accent); color: white; padding: 20px 32px; display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 0.78rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#portada">Portada</a>
+  <a href="#legal">Legal</a>
+  <a href="#toc">Contenido</a>
+  <a href="#intro">Introducción</a>
+  <a href="#contenido1">Búsqueda</a>
+  <a href="#contenido2">Minimax</a>
+  <a href="#contenido3">Alpha-Beta</a>
+  <a href="#contenido4">No-Adversarial</a>
+  <a href="#ejercicio">Ejercicio</a>
+  <a href="#conclusiones">Conclusiones</a>
+  <a href="#referencias">Referencias</a>
+</nav>
+
+<!-- PORTADA -->
+<section id="portada" class="page">
+  <div class="portada-grid"></div>
+  <div class="portada-bg-circles">
+    <div class="circle c1"></div>
+    <div class="circle c2"></div>
+    <div class="circle c3"></div>
+  </div>
+  <div class="portada-content">
+    <div class="portada-badge">Cartilla Digital · Inteligencia Artificial</div>
+    <h1 class="portada-title">
+      Jugando contra<br><em>la máquina</em>
+    </h1>
+    <p class="portada-subtitle">Algoritmos de Búsqueda Adversarial · Minimax · Alpha-Beta Pruning</p>
+    <div class="portada-illustration">
+      <svg class="tree-svg" viewBox="0 0 480 260" xmlns="http://www.w3.org/2000/svg">
+        <line x1="240" y1="40" x2="120" y2="110" stroke="#c1440e" stroke-width="1.5" opacity="0.7"/>
+        <line x1="240" y1="40" x2="360" y2="110" stroke="#c1440e" stroke-width="1.5" opacity="0.7"/>
+        <line x1="120" y1="110" x2="60" y2="180" stroke="#c1440e" stroke-width="1" opacity="0.5"/>
+        <line x1="120" y1="110" x2="180" y2="180" stroke="#c1440e" stroke-width="1" opacity="0.5"/>
+        <line x1="360" y1="110" x2="300" y2="180" stroke="#c1440e" stroke-width="1" opacity="0.5"/>
+        <line x1="360" y1="110" x2="420" y2="180" stroke="#c1440e" stroke-width="1" opacity="0.5"/>
+        <line x1="60" y1="180" x2="30" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+        <line x1="60" y1="180" x2="90" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+        <line x1="180" y1="180" x2="155" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+        <line x1="180" y1="180" x2="205" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+        <line x1="300" y1="180" x2="275" y2="240" stroke="#2d7a4f" stroke-width="1.5" opacity="0.8"/>
+        <line x1="300" y1="180" x2="325" y2="240" stroke="#2d7a4f" stroke-width="1.5" opacity="0.8"/>
+        <line x1="420" y1="180" x2="395" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+        <line x1="420" y1="180" x2="445" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+        <circle cx="240" cy="40" r="20" fill="#c1440e"/>
+        <text x="240" y="44" fill="white" text-anchor="middle" font-family="Space Mono" font-size="10" font-weight="bold">MAX</text>
+        <circle cx="120" cy="110" r="18" fill="#1a3a5c"/>
+        <text x="120" y="114" fill="white" text-anchor="middle" font-family="Space Mono" font-size="9">MIN</text>
+        <circle cx="360" cy="110" r="18" fill="#1a3a5c"/>
+        <text x="360" y="114" fill="white" text-anchor="middle" font-family="Space Mono" font-size="9">MIN</text>
+        <circle cx="60" cy="180" r="16" fill="#555"/>
+        <text x="60" y="184" fill="white" text-anchor="middle" font-family="Space Mono" font-size="8">MAX</text>
+        <circle cx="180" cy="180" r="16" fill="#555"/>
+        <text x="180" y="184" fill="white" text-anchor="middle" font-family="Space Mono" font-size="8">MAX</text>
+        <circle cx="300" cy="180" r="16" fill="#2d7a4f"/>
+        <text x="300" y="184" fill="white" text-anchor="middle" font-family="Space Mono" font-size="8">MAX</text>
+        <circle cx="420" cy="180" r="16" fill="#555"/>
+        <text x="420" y="184" fill="white" text-anchor="middle" font-family="Space Mono" font-size="8">MAX</text>
+        <rect x="20" y="228" width="20" height="20" fill="#444" rx="2"/>
+        <text x="30" y="241" fill="#aaa" text-anchor="middle" font-family="Space Mono" font-size="7">3</text>
+        <rect x="80" y="228" width="20" height="20" fill="#444" rx="2"/>
+        <text x="90" y="241" fill="#aaa" text-anchor="middle" font-family="Space Mono" font-size="7">5</text>
+        <rect x="145" y="228" width="20" height="20" fill="#444" rx="2"/>
+        <text x="155" y="241" fill="#aaa" text-anchor="middle" font-family="Space Mono" font-size="7">2</text>
+        <rect x="195" y="228" width="20" height="20" fill="#444" rx="2"/>
+        <text x="205" y="241" fill="#aaa" text-anchor="middle" font-family="Space Mono" font-size="7">9</text>
+        <rect x="265" y="228" width="20" height="20" fill="#2d7a4f" rx="2"/>
+        <text x="275" y="241" fill="white" text-anchor="middle" font-family="Space Mono" font-size="7">8</text>
+        <rect x="315" y="228" width="20" height="20" fill="#2d7a4f" rx="2"/>
+        <text x="325" y="241" fill="white" text-anchor="middle" font-family="Space Mono" font-size="7">6</text>
+        <rect x="385" y="228" width="20" height="20" fill="#444" rx="2"/>
+        <text x="395" y="241" fill="#888" text-anchor="middle" font-family="Space Mono" font-size="7">✕</text>
+        <rect x="435" y="228" width="20" height="20" fill="#444" rx="2"/>
+        <text x="445" y="241" fill="#888" text-anchor="middle" font-family="Space Mono" font-size="7">✕</text>
+        <rect x="370" y="195" width="68" height="18" fill="#c1440e" rx="2"/>
+        <text x="404" y="207" fill="white" text-anchor="middle" font-family="Space Mono" font-size="7">PODADO α-β</text>
+        <circle cx="240" cy="40" r="22" fill="none" stroke="#d4a017" stroke-width="2" stroke-dasharray="4,2"/>
+      </svg>
+    </div>
+    <p class="portada-footer">Inteligencia Artificial · Algoritmos de Búsqueda · Agentes Competitivos</p>
+  </div>
+</section>
+
+<!-- PÁGINA LEGAL -->
+<section id="legal" class="page">
+  <div class="legal-inner">
+    <div class="legal-rule"></div>
+    <h2 class="legal-title">Página Legal</h2>
+    <p class="legal-sub"></p>
+    <div class="legal-block">
+      <div class="legal-label">Título de la cartilla</div>
+      <div class="legal-value">Jugando contra la Máquina: Algoritmos de Búsqueda Adversarial en IA</div>
+    </div>
+    <div class="legal-block">
+      <div class="legal-label">Elaborado por</div>
+      <div class="legal-value">Jose Manuel Salazar Muñoz</div>
+    </div>
+    <div class="legal-block">
+      <div class="legal-label">Institución</div>
+      <div class="legal-value">Corporación Universitaria Minuto de Dios — UNIMINUTO</div>
+    </div>
+    <div class="legal-block">
+      <div class="legal-label">Curso</div>
+      <div class="legal-value">Inteligencia Artificial y sistemas inteligentes (NRC-8213)</div>
+    </div>
+    <div class="legal-block">
+      <div class="legal-label">Fecha de elaboración</div>
+      <div class="legal-value">Mayo 2026</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TABLA DE CONTENIDO -->
+<section id="toc" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow">Índice</div>
+    <h2 class="section-heading">Tabla de Contenido</h2>
+    <p class="section-body">Esta cartilla está organizada en ocho secciones que llevan al lector desde los fundamentos conceptuales hasta la implementación práctica de los algoritmos de búsqueda adversarial.</p>
+    <div class="toc-grid">
+      <div class="toc-item">
+        <span class="toc-num">01</span>
+        <div>
+          <div class="toc-text">Introducción</div>
+          <div class="toc-desc">Propósito, audiencia e importancia de la cartilla</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">02</span>
+        <div>
+          <div class="toc-text">Búsqueda Adversarial: Fundamentos</div>
+          <div class="toc-desc">Entornos competitivos, agentes y definición del problema</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">03</span>
+        <div>
+          <div class="toc-text">Algoritmo Minimax</div>
+          <div class="toc-desc">Funcionamiento, árbol de juego y pseudocódigo</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">04</span>
+        <div>
+          <div class="toc-text">Alpha-Beta Pruning</div>
+          <div class="toc-desc">Optimización de Minimax, podas y eficiencia</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">05</span>
+        <div>
+          <div class="toc-text">Búsqueda No Adversarial</div>
+          <div class="toc-desc">Contraste con A*, BFS, DFS y búsqueda heurística</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">06</span>
+        <div>
+          <div class="toc-text">Ejercicio en Python</div>
+          <div class="toc-desc">Implementación de Minimax y Alpha-Beta en Tic-Tac-Toe</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">07</span>
+        <div>
+          <div class="toc-text">Conclusiones</div>
+          <div class="toc-desc">Síntesis y planteamiento personal</div>
+        </div>
+      </div>
+      <div class="toc-item">
+        <span class="toc-num">08</span>
+        <div>
+          <div class="toc-text">Referencias Bibliográficas</div>
+          <div class="toc-desc">Fuentes en formato APA 7.ª edición</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTRODUCCIÓN -->
+<section id="intro" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow">Sección 01</div>
+    <h2 class="section-heading">Introducción</h2>
+    <div class="intro-grid">
+      <div class="intro-card">
+        <div class="intro-card-q">¿Cuál es el propósito?</div>
+        <div class="intro-card-a">Presentar de forma clara y didáctica los algoritmos de búsqueda adversarial —especialmente Minimax y Alpha-Beta Pruning— como herramientas fundamentales para el diseño de agentes inteligentes en entornos competitivos, complementando la teoría con una implementación práctica en Python.</div>
+      </div>
+      <div class="intro-card">
+        <div class="intro-card-q">¿A quién va dirigida?</div>
+        <div class="intro-card-a">Esta cartilla está dirigida a estudiantes de Inteligencia Artificial en formación universitaria, con conocimientos básicos de programación y lógica algorítmica, que deseen comprender cómo los agentes computacionales toman decisiones óptimas en escenarios de competencia.</div>
+      </div>
+      <div class="intro-card">
+        <div class="intro-card-q">¿Qué contenido desarrolla?</div>
+        <div class="intro-card-a">La cartilla aborda: (1) los fundamentos de la búsqueda adversarial, (2) el algoritmo Minimax con su árbol de decisión, (3) la optimización mediante Alpha-Beta Pruning, (4) contraste con técnicas no adversariales, y (5) implementación en Python aplicada al juego Tres en Raya.</div>
+      </div>
+      <div class="intro-card">
+        <div class="intro-card-q">¿Cuál es su importancia?</div>
+        <div class="intro-card-a">Comprender cómo una máquina "piensa" frente a un adversario es esencial en IA moderna: desde ajedrez y videojuegos hasta negociaciones automatizadas y ciberseguridad. Estos algoritmos sientan las bases de la toma de decisiones estratégica en sistemas autónomos.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 02: BÚSQUEDA ADVERSARIAL -->
+<section id="contenido1" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow">Sección 02</div>
+    <h2 class="section-heading">Búsqueda Adversarial: Fundamentos</h2>
+    <div class="section-body">
+      <p>En Inteligencia Artificial, la <strong>búsqueda adversarial</strong> se refiere al problema de encontrar una secuencia óptima de acciones cuando existe al menos un agente opuesto que toma decisiones contrarias a nuestros objetivos. Este tipo de escenario es conocido en teoría de juegos como un <em>juego de suma cero</em>: la ganancia de un jugador equivale exactamente a la pérdida del otro.</p>
+      <div class="callout">
+        <div class="callout-label">Definición clave</div>
+        <p>Un <strong>entorno competitivo</strong> o <em>multiagente adversarial</em> es aquel en el que dos o más agentes tienen objetivos opuestos. Cada agente maximiza su propio beneficio, lo que implica que debe <em>anticipar</em> y <em>contrarrestar</em> los movimientos del oponente.</p>
+      </div>
+      <p>Los problemas de búsqueda adversarial se caracterizan por las siguientes propiedades:</p>
+    </div>
+    <table class="compare-table">
+      <tr>
+        <th>Propiedad</th><th>Descripción</th><th>Ejemplo</th>
+      </tr>
+      <tr>
+        <td><strong>Determinismo</strong></td>
+        <td>El resultado de una acción es siempre predecible (sin azar)</td>
+        <td>Ajedrez, Tres en Raya</td>
+      </tr>
+      <tr>
+        <td><strong>Información perfecta</strong></td>
+        <td>Ambos jugadores conocen el estado completo del juego</td>
+        <td>Go, Damas</td>
+      </tr>
+      <tr>
+        <td><strong>Turno alternado</strong></td>
+        <td>Los agentes actúan de forma secuencial, no simultánea</td>
+        <td>Juegos de tablero</td>
+      </tr>
+      <tr>
+        <td><strong>Suma cero</strong></td>
+        <td>El beneficio de uno es exactamente la pérdida del otro</td>
+        <td>La mayoría de juegos clásicos</td>
+      </tr>
+    </table>
+    <div class="section-body">
+      <p>El modelo formal utiliza un <strong>árbol de juego</strong> (game tree), donde cada nodo representa un estado del juego y cada arista representa un movimiento posible. La raíz es el estado actual; las hojas son estados terminales con una puntuación asignada por la <em>función de utilidad</em>.</p>
+    </div>
+    <div class="info-2col">
+      <div class="info-box red">
+        <div class="info-box-title">AGENTE MAXIMIZADOR (MAX)</div>
+        <ul>
+          <li>Representa al jugador que queremos optimizar</li>
+          <li>Busca maximizar la función de utilidad</li>
+          <li>Elige siempre el movimiento de mayor valor</li>
+          <li>Ejemplo: nuestra IA o el jugador "X"</li>
+        </ul>
+      </div>
+      <div class="info-box blue">
+        <div class="info-box-title">AGENTE MINIMIZADOR (MIN)</div>
+        <ul>
+          <li>Representa al adversario o el entorno</li>
+          <li>Busca minimizar la función de utilidad</li>
+          <li>Elige siempre el movimiento de menor valor</li>
+          <li>Ejemplo: el oponente o el jugador "O"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 03: MINIMAX -->
+<section id="contenido2" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow">Sección 03</div>
+    <h2 class="section-heading">Algoritmo Minimax</h2>
+    <div class="section-body">
+      <p>El algoritmo <strong>Minimax</strong> (Russell &amp; Norvig, 2022) es la estrategia fundamental para la toma de decisiones en juegos adversariales de dos jugadores. Su nombre proviene de la operación que realiza: el agente MAX <em>maximiza</em> el valor de utilidad, mientras el agente MIN lo <em>minimiza</em>. El algoritmo explora <strong>todo el árbol de juego</strong> hasta las hojas, aplicando esta lógica de forma recursiva.</p>
+      <p><strong>1. Generación del árbol:</strong> A partir del estado actual, se expanden todos los estados posibles hasta alcanzar los nodos terminales (fin del juego).</p>
+      <p><strong>2. Evaluación de hojas:</strong> Cada estado terminal recibe una puntuación mediante la función de utilidad: positiva si MAX gana, negativa si MIN gana, cero en empate.</p>
+      <p><strong>3. Retropropagación:</strong> El valor óptimo se propaga hacia la raíz: los nodos MIN eligen el hijo de menor valor, los nodos MAX eligen el de mayor valor.</p>
+    </div>
+    <div class="diagram-title">PSEUDOCÓDIGO — ALGORITMO MINIMAX</div>
+    <div class="pseudo">
+      <div><span class="hl">función</span> MINIMAX(estado, esMaximizador):</div>
+      <div class="ind1"><span class="c">// Caso base: estado terminal</span></div>
+      <div class="ind1"><span class="hl">si</span> es_terminal(estado):</div>
+      <div class="ind2"><span class="hl">retornar</span> utilidad(estado)</div>
+      <div class="ind1">&nbsp;</div>
+      <div class="ind1"><span class="hl">si</span> esMaximizador:</div>
+      <div class="ind2">mejor ← −∞</div>
+      <div class="ind2"><span class="hl">para cada</span> movimiento en movimientos_posibles(estado):</div>
+      <div class="ind3">nuevoEstado ← aplicar(movimiento, estado)</div>
+      <div class="ind3">valor ← MINIMAX(nuevoEstado, <span class="hl">Falso</span>)</div>
+      <div class="ind3">mejor ← max(mejor, valor)</div>
+      <div class="ind2"><span class="hl">retornar</span> mejor</div>
+      <div class="ind1">&nbsp;</div>
+      <div class="ind1"><span class="hl">si no</span> (esMinimizador):</div>
+      <div class="ind2">mejor ← +∞</div>
+      <div class="ind2"><span class="hl">para cada</span> movimiento en movimientos_posibles(estado):</div>
+      <div class="ind3">nuevoEstado ← aplicar(movimiento, estado)</div>
+      <div class="ind3">valor ← MINIMAX(nuevoEstado, <span class="hl">Verdadero</span>)</div>
+      <div class="ind3">mejor ← min(mejor, valor)</div>
+      <div class="ind2"><span class="hl">retornar</span> mejor</div>
+    </div>
+    <div class="callout blue">
+      <div class="callout-label">Complejidad computacional</div>
+      <p>Minimax tiene complejidad temporal <strong>O(b<sup>m</sup>)</strong> y espacial <strong>O(bm)</strong>, donde <em>b</em> es el factor de ramificación y <em>m</em> es la profundidad máxima del árbol. Para el ajedrez, b ≈ 35 y m ≈ 80, lo que hace computacionalmente inviable explorar el árbol completo sin optimizaciones.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 04: ALPHA-BETA -->
+<section id="contenido3" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow">Sección 04</div>
+    <h2 class="section-heading">Alpha-Beta Pruning</h2>
+    <div class="section-body">
+      <p><strong>Alpha-Beta Pruning</strong> (poda alfa-beta) es una optimización del algoritmo Minimax que reduce drásticamente el número de nodos evaluados <em>sin alterar el resultado final</em>. El principio es simple: si ya encontramos un movimiento lo suficientemente bueno, ignoramos ramas que no pueden mejorar el resultado actual.</p>
+      <p>• <strong>α (alpha):</strong> el valor máximo que el agente MAX puede garantizar en la ruta actual. Inicialmente −∞.</p>
+      <p>• <strong>β (beta):</strong> el valor mínimo que el agente MIN puede garantizar en la ruta actual. Inicialmente +∞.</p>
+    </div>
+    <div class="callout green">
+      <div class="callout-label">Condición de poda</div>
+      <p>Se poda cuando <strong>β ≤ α</strong>. Esto significa que el jugador MIN no elegiría esa rama porque ya tiene una opción mejor, por lo que MAX no necesita seguir explorándola.</p>
+    </div>
+    <div class="diagram-title">PSEUDOCÓDIGO — ALPHA-BETA PRUNING</div>
+    <div class="pseudo">
+      <div><span class="hl">función</span> ALPHA_BETA(estado, α, β, esMaximizador):</div>
+      <div class="ind1"><span class="hl">si</span> es_terminal(estado):</div>
+      <div class="ind2"><span class="hl">retornar</span> utilidad(estado)</div>
+      <div class="ind1">&nbsp;</div>
+      <div class="ind1"><span class="hl">si</span> esMaximizador:</div>
+      <div class="ind2">valor ← −∞</div>
+      <div class="ind2"><span class="hl">para cada</span> movimiento en movimientos_posibles(estado):</div>
+      <div class="ind3">valor ← max(valor, ALPHA_BETA(hijo, α, β, <span class="hl">Falso</span>))</div>
+      <div class="ind3">α ← max(α, valor)</div>
+      <div class="ind3"><span class="hl">si</span> β ≤ α: <span class="hl">romper</span> <span class="c">// Poda Beta ✂</span></div>
+      <div class="ind2"><span class="hl">retornar</span> valor</div>
+      <div class="ind1">&nbsp;</div>
+      <div class="ind1"><span class="hl">si no</span> (esMinimizador):</div>
+      <div class="ind2">valor ← +∞</div>
+      <div class="ind2"><span class="hl">para cada</span> movimiento en movimientos_posibles(estado):</div>
+      <div class="ind3">valor ← min(valor, ALPHA_BETA(hijo, α, β, <span class="hl">Verdadero</span>))</div>
+      <div class="ind3">β ← min(β, valor)</div>
+      <div class="ind3"><span class="hl">si</span> β ≤ α: <span class="hl">romper</span> <span class="c">// Poda Alpha ✂</span></div>
+      <div class="ind2"><span class="hl">retornar</span> valor</div>
+    </div>
+    <div class="section-body">
+      <p>En el <strong>mejor caso</strong>, Alpha-Beta reduce la complejidad de <strong>O(b<sup>m</sup>)</strong> a <strong>O(b<sup>m/2</sup>)</strong>, permitiendo explorar el doble de profundidad con el mismo presupuesto computacional. En casos prácticos se logra una reducción del 50 al 90% de nodos evaluados.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 05: NO ADVERSARIAL -->
+<section id="contenido4" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow">Sección 05</div>
+    <h2 class="section-heading">Búsqueda No Adversarial</h2>
+    <div class="section-body">
+      <p>A diferencia de la búsqueda adversarial, la <strong>búsqueda no adversarial</strong> opera en entornos donde solo existe un agente tomando decisiones, sin oponentes con intereses contrarios. El objetivo es encontrar un camino desde un estado inicial hasta un estado objetivo, optimizando algún criterio (distancia, costo, tiempo).</p>
+    </div>
+    <table class="compare-table">
+      <tr>
+        <th>Algoritmo</th><th>Tipo</th><th>Completo</th><th>Óptimo</th><th>Complejidad</th>
+      </tr>
+      <tr>
+        <td><strong>BFS</strong></td>
+        <td><span class="tag tag-blue">No informada</span></td>
+        <td>✓ Sí</td><td>✓ Costo uniforme</td><td>O(b<sup>d</sup>)</td>
+      </tr>
+      <tr>
+        <td><strong>DFS</strong></td>
+        <td><span class="tag tag-blue">No informada</span></td>
+        <td>✗ No</td><td>✗ No</td><td>O(b<sup>m</sup>)</td>
+      </tr>
+      <tr>
+        <td><strong>Costo uniforme</strong></td>
+        <td><span class="tag tag-blue">No informada</span></td>
+        <td>✓ Sí</td><td>✓ Sí</td><td>O(b<sup>C*/ε</sup>)</td>
+      </tr>
+      <tr>
+        <td><strong>A*</strong></td>
+        <td><span class="tag tag-green">Informada</span></td>
+        <td>✓ Sí</td><td>✓ Sí</td><td>O(b<sup>d</sup>)</td>
+      </tr>
+      <tr>
+        <td><strong>Minimax + Alpha-Beta</strong></td>
+        <td><span class="tag tag-red">Adversarial</span></td>
+        <td>✓ Sí</td><td>✓ Sí</td><td>O(b<sup>m/2</sup>)</td>
+      </tr>
+    </table>
+    <div class="callout">
+      <div class="callout-label">Diferencia fundamental</div>
+      <p>La búsqueda no adversarial asume que el entorno es <strong>cooperativo o neutral</strong>. La búsqueda adversarial modela un entorno donde otro agente activamente <strong>intenta frustrar</strong> los objetivos del primero. En lugar de buscar el camino más corto, se busca la <em>política óptima</em> frente al peor caso posible.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 06: EJERCICIO PYTHON -->
+<section id="ejercicio" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow" style="color:#c1440e">Sección 06</div>
+    <h2 class="section-heading" style="color:var(--paper); border-color:rgba(255,255,255,0.2)">Ejercicio en Python</h2>
+    <p style="color:rgba(244,241,235,0.8); margin-bottom:28px; font-size:0.95rem; line-height:1.8">
+      Se implementó en Python el juego <strong>Tres en Raya (Tic-Tac-Toe)</strong>, un caso clásico de búsqueda adversarial con información perfecta. Se compararon Minimax clásico y Minimax con Alpha-Beta Pruning, midiendo la cantidad de nodos evaluados.
+    </p>
+    <div class="code-wrap">
+      <div class="code-header">
+        <span class="code-lang">PYTHON 3</span>
+        <span class="code-file">minimax_alphabeta.py</span>
+      </div>
+<pre><span class="kw">import</span> math
+
+<span class="cm"># ─── Lógica del juego ─────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">verificar_ganador</span>(tablero, jugador):
+    combos = [[<span class="nm">0</span>,<span class="nm">1</span>,<span class="nm">2</span>],[<span class="nm">3</span>,<span class="nm">4</span>,<span class="nm">5</span>],[<span class="nm">6</span>,<span class="nm">7</span>,<span class="nm">8</span>],
+              [<span class="nm">0</span>,<span class="nm">3</span>,<span class="nm">6</span>],[<span class="nm">1</span>,<span class="nm">4</span>,<span class="nm">7</span>],[<span class="nm">2</span>,<span class="nm">5</span>,<span class="nm">8</span>],
+              [<span class="nm">0</span>,<span class="nm">4</span>,<span class="nm">8</span>],[<span class="nm">2</span>,<span class="nm">4</span>,<span class="nm">6</span>]]
+    <span class="kw">return</span> any(all(tablero[i]==jugador <span class="kw">for</span> i <span class="kw">in</span> c) <span class="kw">for</span> c <span class="kw">in</span> combos)
+
+<span class="kw">def</span> <span class="fn">evaluar</span>(t):
+    <span class="kw">if</span> verificar_ganador(t,<span class="st">'X'</span>): <span class="kw">return</span> <span class="nm">10</span>
+    <span class="kw">if</span> verificar_ganador(t,<span class="st">'O'</span>): <span class="kw">return</span> -<span class="nm">10</span>
+    <span class="kw">return</span> <span class="nm">0</span>
+
+<span class="cm"># ─── Algoritmo MINIMAX ────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">minimax</span>(tablero, profundidad, es_max):
+    e = evaluar(tablero)
+    <span class="kw">if</span> e: <span class="kw">return</span> e - profundidad <span class="kw">if</span> e > <span class="nm">0</span> <span class="kw">else</span> e + profundidad
+    libres = [i <span class="kw">for</span> i,x <span class="kw">in</span> enumerate(tablero) <span class="kw">if</span> x==<span class="st">' '</span>]
+    <span class="kw">if not</span> libres: <span class="kw">return</span> <span class="nm">0</span>
+    <span class="kw">if</span> es_max:
+        mejor = -math.inf
+        <span class="kw">for</span> m <span class="kw">in</span> libres:
+            tablero[m]=<span class="st">'X'</span>; mejor=max(mejor,minimax(tablero,profundidad+<span class="nm">1</span>,<span class="kw">False</span>)); tablero[m]=<span class="st">' '</span>
+        <span class="kw">return</span> mejor
+    <span class="kw">else</span>:
+        mejor = math.inf
+        <span class="kw">for</span> m <span class="kw">in</span> libres:
+            tablero[m]=<span class="st">'O'</span>; mejor=min(mejor,minimax(tablero,profundidad+<span class="nm">1</span>,<span class="kw">True</span>)); tablero[m]=<span class="st">' '</span>
+        <span class="kw">return</span> mejor
+
+<span class="cm"># ─── Algoritmo ALPHA-BETA PRUNING ─────────────────────</span>
+<span class="kw">def</span> <span class="fn">alpha_beta</span>(tablero, prof, a, b, es_max):
+    e = evaluar(tablero)
+    <span class="kw">if</span> e: <span class="kw">return</span> e - prof <span class="kw">if</span> e > <span class="nm">0</span> <span class="kw">else</span> e + prof
+    libres = [i <span class="kw">for</span> i,x <span class="kw">in</span> enumerate(tablero) <span class="kw">if</span> x==<span class="st">' '</span>]
+    <span class="kw">if not</span> libres: <span class="kw">return</span> <span class="nm">0</span>
+    <span class="kw">if</span> es_max:
+        mejor = -math.inf
+        <span class="kw">for</span> m <span class="kw">in</span> libres:
+            tablero[m]=<span class="st">'X'</span>
+            mejor = max(mejor, alpha_beta(tablero,prof+<span class="nm">1</span>,a,b,<span class="kw">False</span>))
+            tablero[m]=<span class="st">' '</span>
+            a = max(a, mejor)
+            <span class="kw">if</span> b &lt;= a: <span class="kw">break</span>  <span class="cm"># ✂ Poda Beta</span>
+        <span class="kw">return</span> mejor
+    <span class="kw">else</span>:
+        mejor = math.inf
+        <span class="kw">for</span> m <span class="kw">in</span> libres:
+            tablero[m]=<span class="st">'O'</span>
+            mejor = min(mejor, alpha_beta(tablero,prof+<span class="nm">1</span>,a,b,<span class="kw">True</span>))
+            tablero[m]=<span class="st">' '</span>
+            b = min(b, mejor)
+            <span class="kw">if</span> b &lt;= a: <span class="kw">break</span>  <span class="cm"># ✂ Poda Alpha</span>
+        <span class="kw">return</span> mejor</pre>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num">549,945</div>
+        <div class="stat-label">Nodos evaluados por Minimax</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">34,202</div>
+        <div class="stat-label">Nodos evaluados por Alpha-Beta</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">93.8%</div>
+        <div class="stat-label">Reducción de nodos evaluados</div>
+      </div>
+    </div>
+    <p style="color:rgba(244,241,235,0.8); margin-bottom:16px; font-size:0.88rem">Comparación visual de nodos evaluados:</p>
+    <div class="bar-chart">
+      <div class="bar-row">
+        <span class="bar-label">Minimax</span>
+        <div class="bar-track">
+          <div class="bar-fill mm" style="width:100%">549,945 nodos</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Alpha-Beta</span>
+        <div class="bar-track">
+          <div class="bar-fill ab" style="width:6.2%"></div>
+          <span style="font-family:var(--mono);font-size:0.72rem;color:#a0e0b0;margin-left:8px">34,202 nodos</span>
+        </div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:28px">
+      <div class="callout-label">Resultado clave</div>
+      <p>Ambos algoritmos eligen el <strong>mismo movimiento óptimo</strong> (posición 0 — esquina). Alpha-Beta Pruning logra idéntico resultado evaluando <strong>15.8 veces menos nodos</strong> gracias a las podas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 07: CONCLUSIONES -->
+<section id="conclusiones" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow" style="color:var(--gold)">Sección 07</div>
+    <h2 class="section-heading">Conclusiones</h2>
+    <ul class="conclusion-list">
+      <li data-n="01">
+        Los algoritmos de búsqueda adversarial, especialmente Minimax, proveen un marco formal para la toma de decisiones óptimas en entornos competitivos. Al modelar explícitamente la oposición del adversario, permiten que un agente garantice el mejor resultado posible <em>incluso en el peor escenario</em>, lo que los distingue fundamentalmente de las técnicas no adversariales.
+      </li>
+      <li data-n="02">
+        Alpha-Beta Pruning demuestra que la eficiencia computacional y la optimidad no son excluyentes: al descartar ramas irrelevantes sin sacrificar el resultado, reduce la complejidad de O(b<sup>m</sup>) a O(b<sup>m/2</sup>). La implementación en Python evidenció una reducción del 93.8% en nodos evaluados.
+      </li>
+      <li data-n="03">
+        El contraste con la búsqueda no adversarial revela que la presencia de un oponente activo transforma radicalmente la naturaleza del problema: ya no se trata de encontrar el camino óptimo, sino de encontrar la <em>política óptima</em> frente a cualquier acción que el adversario pueda tomar.
+      </li>
+      <li data-n="04">
+        Las aplicaciones de estos algoritmos trascienden los juegos: sistemas de negociación automatizada, seguridad informática, robótica colaborativa y economía computacional emplean variantes de Minimax para modelar interacciones entre agentes con objetivos opuestos.
+      </li>
+    </ul>
+    <div class="personal-stmt">
+      <div class="personal-label">▸ PLANTEAMIENTO PERSONAL</div>
+      <p>Estudiar los algoritmos de búsqueda adversarial me permitió comprender que la inteligencia artificial no solo consiste en optimizar métricas en ambientes controlados, sino en razonar estratégicamente frente a la incertidumbre generada por otros agentes racionales. Lo que más me llamó la atención es cómo Alpha-Beta Pruning encapsula una intuición muy humana —"si ya sé que este camino no puede ser mejor, ni lo intento"— y la formaliza matemáticamente con resultados contundentes. Esto me genera la convicción de que el diseño de buenos algoritmos no solo requiere conocimiento técnico, sino también capacidad de pensar como el sistema que se quiere resolver.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 08: REFERENCIAS -->
+<section id="referencias" class="page">
+  <div class="section-wrap">
+    <div class="section-eyebrow">Sección 08</div>
+    <h2 class="section-heading">Referencias Bibliográficas</h2>
+    <p style="font-size:0.85rem;color:#666;margin-bottom:8px">Normas APA 7.ª edición</p>
+    <div class="ref-list">
+      <div class="ref-item">
+        <span class="ref-n">[1]</span>
+        <span>Russell, S., &amp; Norvig, P. (2022). <em>Artificial Intelligence: A Modern Approach</em> (4.ª ed.). Pearson. https://aima.cs.berkeley.edu/</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-n">[2]</span>
+        <span>Luger, G. F. (2005). <em>Artificial Intelligence: Structures and Strategies for Complex Problem Solving</em> (5.ª ed.). Addison-Wesley.</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-n">[3]</span>
+        <span>Knuth, D. E., &amp; Moore, R. W. (1975). An Analysis of Alpha-Beta Pruning. <em>Artificial Intelligence</em>, 6(4), 293–326. https://doi.org/10.1016/0004-3702(75)90019-3</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-n">[4]</span>
+        <span>Bratko, I. (2001). <em>Prolog Programming for Artificial Intelligence</em> (3.ª ed.). Addison-Wesley.</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-n">[5]</span>
+        <span>Python Software Foundation. (2024). <em>Python 3 Documentation</em>. https://docs.python.org/3/</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-n">[6]</span>
+        <span>Corporación Universitaria Minuto de Dios. (2026). <em>Anexo — Guía de ejercicios: Algoritmos de búsqueda adversarial</em> (ISOFV163). UNIMINUTO. https://repo.uniminuto.edu/recursos/files/r1r/w22438w/ISOFV163/ISOFV163_A4_Anexo.pdf</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-n">[7]</span>
+        <span>Poole, D., &amp; Mackworth, A. (2017). <em>Artificial Intelligence: Foundations of Computational Agents</em> (2.ª ed.). Cambridge University Press. https://artint.info/</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PIE DE PÁGINA -->
+<div class="cta-bar">
+  <span>© 2026 — Cartilla Digital: Jugando contra la Máquina · UNIMINUTO · NRC-8213 . Ingenieria de Software</span>
+  <span>Jose Manuel Salazar Muñoz</span>
+</div>
+
+<script>
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav a');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const active = document.querySelector(`nav a[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.4 });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
